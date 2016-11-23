@@ -3,6 +3,7 @@
 #include <opencv2\imgproc\imgproc.hpp>
 #include <opencv2\calib3d\calib3d.hpp>
 #include <iostream>
+#include <fstream>
 
 using namespace cv;
 using namespace std;
@@ -65,6 +66,30 @@ void init() {
 	k2 = distCoeffs.at<double>(0, 1);
 	p1 = distCoeffs.at<double>(0, 2);
 	p2 = distCoeffs.at<double>(0, 3);
+	/*
+	vector<float>paramlist;
+	float param = 0.0;
+	ifstream infile("param.txt");
+	while (infile >> param) {
+		paramlist.push_back(param);
+	}
+	fx = paramlist[0];
+	fy = paramlist[1];
+	cx = paramlist[2];
+	cy = paramlist[3];
+	k1 = paramlist[4];
+	k2 = paramlist[5];
+	p1 = paramlist[6];
+	p2 = paramlist[7];
+
+	double m[] = { fx,0,cx,0,fy,cy,0,0,1 };
+	Mat A(3, 3, CV_64FC1, m);
+	cameraMatrix = A;
+
+	double d[] = { k1,k2,p1,p2 };
+	Mat D(4, 1, CV_64FC1, d);
+	distCoeffs = D;
+	*/
 }
 
 Point2f world_to_cam_to_pixel(double w[], Mat R, Mat tvec) {
@@ -128,6 +153,7 @@ int main() {
 			//drawChessboardCorners(img, _boardSize, Mat(imageCorners), found);
 
 			if (imageCorners.size() == _boardSize.area()) {
+				/*
 				Scalar pointcolor(219, 59, 38);
 				circle(img, imageCorners.at(0), 3, pointcolor, thickness);
 				circle(img, imageCorners.at(1), 3, pointcolor, thickness);
@@ -139,6 +165,7 @@ int main() {
 				circle(img, imageCorners.at(9), 3, pointcolor, thickness);
 				circle(img, imageCorners.at(6), 3, pointcolor, thickness);
 				circle(img, imageCorners.at(3), 3, pointcolor, thickness);
+				*/
 				solvePnP(objectCorners, imageCorners, cameraMatrix, distCoeffs, rvec, tvec);
 				Mat R;
 				Rodrigues(rvec, R);
@@ -148,7 +175,7 @@ int main() {
 				Mat P = -R_inv*tvec;
 				double* p = (double*)P.data;
 
-				cout << "카메라 원점 : x=" << p[0] << " y=" << p[1] << " z=" << p[2] << endl;
+				cout << "x=" << p[0] << " y=" << p[1] << " z=" << p[2] << endl;
 
 				//pan, tilt
 				double z[] = { 0,0,1 };
@@ -157,46 +184,48 @@ int main() {
 				double* zw = (double *)Zw.data;
 				double pan = atan2(zw[1], zw[0]) - CV_PI / 2.0;
 				double tilt = atan2(zw[2], sqrt(zw[0]*zw[0] + zw[1]*zw[1]));
-				cout << "Pan : " << pan*180.0/CV_PI << endl;
-				cout << "Tilt : " << tilt*180.0/CV_PI << endl;
+				cout << "Pan: " << pan*180.0/CV_PI << endl;
+				cout << "Tilt: " << tilt*180.0/CV_PI << endl;
 				cout << endl;
 
-				double p1[] = { 0,0,0 };
-				double p2[] = { 0,6,0 };
-				double p3[] = { 9,6,0 };
-				double p4[] = { 9,0,0 };
+				double _p1[] = { 0,0,0 };
+				double _p2[] = { 0,6,0 };
+				double _p3[] = { 9,6,0 };
+				double _p4[] = { 9,0,0 };
 
-				double p5[] = { 0,0,6 };
-				double p6[] = { 0,6,6 };
-				double p7[] = { 9,6,6 };
-				double p8[] = { 9,0,6 };
+				double _p5[] = { 0,0,6 };
+				double _p6[] = { 0,6,6 };
+				double _p7[] = { 9,6,6 };
+				double _p8[] = { 9,0,6 };
 
-				line(img, world_to_cam_to_pixel(p1, R, tvec),
-					world_to_cam_to_pixel(p2, R, tvec), color, thickness);
-				line(img, world_to_cam_to_pixel(p2, R, tvec),
-					world_to_cam_to_pixel(p3, R, tvec), color, thickness);
-				line(img, world_to_cam_to_pixel(p3, R, tvec),
-					world_to_cam_to_pixel(p4, R, tvec), color, thickness);
-				line(img, world_to_cam_to_pixel(p4, R, tvec),
-					world_to_cam_to_pixel(p1, R, tvec), color, thickness);
+				line(img, world_to_cam_to_pixel(_p1, R, tvec),
+					world_to_cam_to_pixel(_p2, R, tvec), color, thickness);
+				line(img, world_to_cam_to_pixel(_p2, R, tvec),
+					world_to_cam_to_pixel(_p3, R, tvec), color, thickness);
+				line(img, world_to_cam_to_pixel(_p3, R, tvec),
+					world_to_cam_to_pixel(_p4, R, tvec), color, thickness);
+				line(img, world_to_cam_to_pixel(_p4, R, tvec),
+					world_to_cam_to_pixel(_p1, R, tvec), color, thickness);
 				
-				line(img, world_to_cam_to_pixel(p5, R, tvec),
-					world_to_cam_to_pixel(p6, R, tvec), color, thickness);
-				line(img, world_to_cam_to_pixel(p6, R, tvec),
-					world_to_cam_to_pixel(p7, R, tvec), color, thickness);
-				line(img, world_to_cam_to_pixel(p7, R, tvec),
-					world_to_cam_to_pixel(p8, R, tvec), color, thickness);
-				line(img, world_to_cam_to_pixel(p8, R, tvec),
-					world_to_cam_to_pixel(p5, R, tvec), color, thickness);
+				line(img, world_to_cam_to_pixel(_p5, R, tvec),
+					world_to_cam_to_pixel(_p6, R, tvec), color, thickness);
+				line(img, world_to_cam_to_pixel(_p6, R, tvec),
+					world_to_cam_to_pixel(_p7, R, tvec), color, thickness);
+				line(img, world_to_cam_to_pixel(_p7, R, tvec),
+					world_to_cam_to_pixel(_p8, R, tvec), color, thickness);
+				line(img, world_to_cam_to_pixel(_p8, R, tvec),
+					world_to_cam_to_pixel(_p5, R, tvec), color, thickness);
 
-				line(img, world_to_cam_to_pixel(p1, R, tvec),
-					world_to_cam_to_pixel(p5, R, tvec), color, thickness);
-				line(img, world_to_cam_to_pixel(p2, R, tvec),
-					world_to_cam_to_pixel(p6, R, tvec), color, thickness);
-				line(img, world_to_cam_to_pixel(p3, R, tvec),
-					world_to_cam_to_pixel(p7, R, tvec), color, thickness);
-				line(img, world_to_cam_to_pixel(p4, R, tvec),
-					world_to_cam_to_pixel(p8, R, tvec), color, thickness);				
+				line(img, world_to_cam_to_pixel(_p1, R, tvec),
+					world_to_cam_to_pixel(_p5, R, tvec), color, thickness);
+				line(img, world_to_cam_to_pixel(_p2, R, tvec),
+					world_to_cam_to_pixel(_p6, R, tvec), color, thickness);
+				line(img, world_to_cam_to_pixel(_p3, R, tvec),
+					world_to_cam_to_pixel(_p7, R, tvec), color, thickness);
+				line(img, world_to_cam_to_pixel(_p4, R, tvec),
+					world_to_cam_to_pixel(_p8, R, tvec), color, thickness);
+
+
 			}
 		}		
 		imshow("cam", img);
