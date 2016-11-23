@@ -20,7 +20,7 @@ double fx = 0.0, fy = 0.0, cx = 0.0, cy = 0.0,
 k1 = 0.0, k2 = 0.0, p1 = 0.0, p2 = 0.0;
 
 Scalar color(0, 255, 0);
-int thickness = 3;
+int thickness = 2;
 
 void init() {
 	for (int i = 0; i < 20; i++) {
@@ -46,7 +46,7 @@ void init() {
 			cornerSubPix(img_gray, imageCorners, Size(11, 11), Size(-1, -1),
 				TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
 		else
-			cout << found << endl;
+			std::cout << found << endl;
 		drawChessboardCorners(img, boardSize, Mat(imageCorners), found);
 
 		if (imageCorners.size() == boardSize.area()) {			
@@ -66,30 +66,6 @@ void init() {
 	k2 = distCoeffs.at<double>(0, 1);
 	p1 = distCoeffs.at<double>(0, 2);
 	p2 = distCoeffs.at<double>(0, 3);
-	/*
-	vector<float>paramlist;
-	float param = 0.0;
-	ifstream infile("param.txt");
-	while (infile >> param) {
-		paramlist.push_back(param);
-	}
-	fx = paramlist[0];
-	fy = paramlist[1];
-	cx = paramlist[2];
-	cy = paramlist[3];
-	k1 = paramlist[4];
-	k2 = paramlist[5];
-	p1 = paramlist[6];
-	p2 = paramlist[7];
-
-	double m[] = { fx,0,cx,0,fy,cy,0,0,1 };
-	Mat A(3, 3, CV_64FC1, m);
-	cameraMatrix = A;
-
-	double d[] = { k1,k2,p1,p2 };
-	Mat D(4, 1, CV_64FC1, d);
-	distCoeffs = D;
-	*/
 }
 
 Point2f world_to_cam_to_pixel(double w[], Mat R, Mat tvec) {
@@ -98,30 +74,27 @@ Point2f world_to_cam_to_pixel(double w[], Mat R, Mat tvec) {
 	double* pc = (double*)Pc.data;
 	double u = pc[0] / pc[2];
 	double v = pc[1] / pc[2];
-	double r2 = u*u + v*v;
-	double u_d = (1 + k1*r2 + k2*r2*r2)*u + 2 * p1*u*v + p2*(r2 + 2 * u*u);
-	double v_d = (1 + k1*r2 + k2*r2*r2)*v + p1*(r2 + 2 * v*v) + 2 * p2*u*v;
-	double x = u_d*fx + cx;
-	double y = v_d*fy + cy;
+	double x = u*fx + cx;
+	double y = v*fy + cy;
 	return Point2f(x, y);
 }
 
 int main() {
-	cout << "Camera Calibration...." << endl;
+	std::cout << "Camera Calibration...." << endl;
 	init();
-	cout << "Camera Calibration Complete!!" << endl;
+	std::cout << "Camera Calibration Complete!!" << endl;
 	Mat img;
 	Size _boardSize(3, 4);
 	VideoCapture vc(0);
 	if (!vc.isOpened()) return 0;
 
 	bool flag = false;
-	cout << "-----------------Start findChessboard Push Space button-----------------" << endl;
+	std::cout << "-----------------Start findChessboard Push Space button-----------------" << endl;
+	std::cout << "Press Space........." << endl;
 
 	while (1) {		
 		Mat rvec, tvec;
 		vc >> img;
-		Size imageSize = img.size();
 		if (img.empty()) break;		
 		
 		int keycode = waitKey(33);
@@ -140,7 +113,7 @@ int main() {
 			Mat img_gray;
 			for (int i = 0; i < _boardSize.height; i++) {
 				for (int j = 0; j < _boardSize.width; j++) {
-					objectCorners.push_back(Point3f(i, j, 0.0f));
+					objectCorners.push_back(Point3f(i*3, j*3, 0.0f));
 				}
 			}
 
@@ -175,7 +148,7 @@ int main() {
 				Mat P = -R_inv*tvec;
 				double* p = (double*)P.data;
 
-				cout << "x=" << p[0] << " y=" << p[1] << " z=" << p[2] << endl;
+				std::cout << "x=" << p[0] << " y=" << p[1] << " z=" << p[2] << endl;
 
 				//pan, tilt
 				double z[] = { 0,0,1 };
@@ -184,9 +157,9 @@ int main() {
 				double* zw = (double *)Zw.data;
 				double pan = atan2(zw[1], zw[0]) - CV_PI / 2.0;
 				double tilt = atan2(zw[2], sqrt(zw[0]*zw[0] + zw[1]*zw[1]));
-				cout << "Pan: " << pan*180.0/CV_PI << endl;
-				cout << "Tilt: " << tilt*180.0/CV_PI << endl;
-				cout << endl;
+				std::cout << "Pan: " << pan*180.0/CV_PI << endl;
+				std::cout << "Tilt: " << tilt*180.0/CV_PI << endl;
+				std::cout << endl;
 
 				double _p1[] = { 0,0,0 };
 				double _p2[] = { 0,6,0 };
@@ -197,35 +170,40 @@ int main() {
 				double _p6[] = { 0,6,6 };
 				double _p7[] = { 9,6,6 };
 				double _p8[] = { 9,0,6 };
-
-				line(img, world_to_cam_to_pixel(_p1, R, tvec),
-					world_to_cam_to_pixel(_p2, R, tvec), color, thickness);
-				line(img, world_to_cam_to_pixel(_p2, R, tvec),
-					world_to_cam_to_pixel(_p3, R, tvec), color, thickness);
-				line(img, world_to_cam_to_pixel(_p3, R, tvec),
-					world_to_cam_to_pixel(_p4, R, tvec), color, thickness);
-				line(img, world_to_cam_to_pixel(_p4, R, tvec),
-					world_to_cam_to_pixel(_p1, R, tvec), color, thickness);
 				
-				line(img, world_to_cam_to_pixel(_p5, R, tvec),
-					world_to_cam_to_pixel(_p6, R, tvec), color, thickness);
-				line(img, world_to_cam_to_pixel(_p6, R, tvec),
-					world_to_cam_to_pixel(_p7, R, tvec), color, thickness);
-				line(img, world_to_cam_to_pixel(_p7, R, tvec),
-					world_to_cam_to_pixel(_p8, R, tvec), color, thickness);
-				line(img, world_to_cam_to_pixel(_p8, R, tvec),
-					world_to_cam_to_pixel(_p5, R, tvec), color, thickness);
+				Point2f _p1_p = world_to_cam_to_pixel(_p1, R, tvec);
+				Point2f _p2_p = world_to_cam_to_pixel(_p2, R, tvec);
+				Point2f _p3_p = world_to_cam_to_pixel(_p3, R, tvec);
+				Point2f _p4_p = world_to_cam_to_pixel(_p4, R, tvec);
+				Point2f _p5_p = world_to_cam_to_pixel(_p5, R, tvec);
+				Point2f _p6_p = world_to_cam_to_pixel(_p6, R, tvec);
+				Point2f _p7_p = world_to_cam_to_pixel(_p7, R, tvec);
+				Point2f _p8_p = world_to_cam_to_pixel(_p8, R, tvec);
 
-				line(img, world_to_cam_to_pixel(_p1, R, tvec),
-					world_to_cam_to_pixel(_p5, R, tvec), color, thickness);
-				line(img, world_to_cam_to_pixel(_p2, R, tvec),
-					world_to_cam_to_pixel(_p6, R, tvec), color, thickness);
-				line(img, world_to_cam_to_pixel(_p3, R, tvec),
-					world_to_cam_to_pixel(_p7, R, tvec), color, thickness);
-				line(img, world_to_cam_to_pixel(_p4, R, tvec),
-					world_to_cam_to_pixel(_p8, R, tvec), color, thickness);
+				cv::line(img, _p1_p, _p2_p, color, thickness);
+				cv::line(img, _p2_p, _p3_p, color, thickness);
+				cv::line(img, _p3_p, _p4_p, color, thickness);
+				cv::line(img, _p4_p, _p1_p, color, thickness);
+				
+				cv::line(img, _p5_p, _p6_p, color, thickness);
+				cv::line(img, _p6_p, _p7_p, color, thickness);
+				cv::line(img, _p7_p, _p8_p, color, thickness);
+				cv::line(img, _p8_p, _p5_p, color, thickness);
 
-
+				cv::line(img, _p1_p, _p5_p, color, thickness);
+				cv::line(img, _p2_p, _p6_p, color, thickness);
+				cv::line(img, _p3_p, _p7_p, color, thickness);
+				cv::line(img, _p4_p, _p8_p, color, thickness);
+			
+				Scalar textcolor(255, 255, 255);
+				cv::putText(img, "(0, 0, 0)", _p1_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
+				cv::putText(img, "(0, 6, 0)", _p2_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
+				cv::putText(img, "(9, 6, 0)", _p3_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
+				cv::putText(img, "(9, 0, 0)", _p4_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
+				cv::putText(img, "(0, 0, 6)", _p5_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
+				cv::putText(img, "(0, 6, 6)", _p6_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
+				cv::putText(img, "(9, 6, 6)", _p7_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
+				cv::putText(img, "(9, 0, 6)", _p8_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
 			}
 		}		
 		imshow("cam", img);
