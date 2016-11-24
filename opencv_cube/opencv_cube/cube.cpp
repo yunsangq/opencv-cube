@@ -19,7 +19,7 @@ int flag = 0;
 double fx = 0.0, fy = 0.0, cx = 0.0, cy = 0.0,
 k1 = 0.0, k2 = 0.0, p1 = 0.0, p2 = 0.0;
 
-Scalar color(0, 255, 0);
+Scalar color(0, 0, 0);
 int thickness = 2;
 
 void init() {
@@ -79,6 +79,28 @@ Point2f world_to_cam_to_pixel(double w[], Mat R, Mat tvec) {
 	return Point2f(x, y);
 }
 
+double _p1[] = { 0,0,0 };
+double _p2[] = { 0,8.5,0 };
+double _p3[] = { 10,8.5,0 };
+double _p4[] = { 10,0,0 };
+
+double _p5[] = { 0,0,3.3 };
+double _p6[] = { 0,8.5,3.3 };
+double _p7[] = { 10,8.5,3.3 };
+double _p8[] = { 10,0,3.3 };
+
+Mat R;
+Mat rvec, tvec;
+
+Point2f _p1_p;
+Point2f _p2_p;
+Point2f _p3_p;
+Point2f _p4_p;
+Point2f _p5_p;
+Point2f _p6_p;
+Point2f _p7_p;
+Point2f _p8_p;
+
 int main() {
 	std::cout << "Camera Calibration...." << endl;
 	init();
@@ -92,8 +114,7 @@ int main() {
 	std::cout << "-----------------Start findChessboard Push Space button-----------------" << endl;
 	std::cout << "Press Space........." << endl;
 
-	while (1) {		
-		Mat rvec, tvec;
+	while (1) {
 		vc >> img;
 		if (img.empty()) break;		
 		
@@ -126,7 +147,6 @@ int main() {
 			//drawChessboardCorners(img, _boardSize, Mat(imageCorners), found);
 
 			if (imageCorners.size() == _boardSize.area()) {
-				/*
 				Scalar pointcolor(219, 59, 38);
 				circle(img, imageCorners.at(0), 3, pointcolor, thickness);
 				circle(img, imageCorners.at(1), 3, pointcolor, thickness);
@@ -138,9 +158,9 @@ int main() {
 				circle(img, imageCorners.at(9), 3, pointcolor, thickness);
 				circle(img, imageCorners.at(6), 3, pointcolor, thickness);
 				circle(img, imageCorners.at(3), 3, pointcolor, thickness);
-				*/
+				
 				solvePnP(objectCorners, imageCorners, cameraMatrix, distCoeffs, rvec, tvec);
-				Mat R;
+				
 				Rodrigues(rvec, R);
 				Mat R_inv = R.inv();
 
@@ -160,52 +180,44 @@ int main() {
 				std::cout << "Pan: " << pan*180.0/CV_PI << endl;
 				std::cout << "Tilt: " << tilt*180.0/CV_PI << endl;
 				std::cout << endl;
-
-				double _p1[] = { 0,0,0 };
-				double _p2[] = { 0,6,0 };
-				double _p3[] = { 9,6,0 };
-				double _p4[] = { 9,0,0 };
-
-				double _p5[] = { 0,0,6 };
-				double _p6[] = { 0,6,6 };
-				double _p7[] = { 9,6,6 };
-				double _p8[] = { 9,0,6 };
-				
-				Point2f _p1_p = world_to_cam_to_pixel(_p1, R, tvec);
-				Point2f _p2_p = world_to_cam_to_pixel(_p2, R, tvec);
-				Point2f _p3_p = world_to_cam_to_pixel(_p3, R, tvec);
-				Point2f _p4_p = world_to_cam_to_pixel(_p4, R, tvec);
-				Point2f _p5_p = world_to_cam_to_pixel(_p5, R, tvec);
-				Point2f _p6_p = world_to_cam_to_pixel(_p6, R, tvec);
-				Point2f _p7_p = world_to_cam_to_pixel(_p7, R, tvec);
-				Point2f _p8_p = world_to_cam_to_pixel(_p8, R, tvec);
-
-				cv::line(img, _p1_p, _p2_p, color, thickness);
-				cv::line(img, _p2_p, _p3_p, color, thickness);
-				cv::line(img, _p3_p, _p4_p, color, thickness);
-				cv::line(img, _p4_p, _p1_p, color, thickness);
-				
-				cv::line(img, _p5_p, _p6_p, color, thickness);
-				cv::line(img, _p6_p, _p7_p, color, thickness);
-				cv::line(img, _p7_p, _p8_p, color, thickness);
-				cv::line(img, _p8_p, _p5_p, color, thickness);
-
-				cv::line(img, _p1_p, _p5_p, color, thickness);
-				cv::line(img, _p2_p, _p6_p, color, thickness);
-				cv::line(img, _p3_p, _p7_p, color, thickness);
-				cv::line(img, _p4_p, _p8_p, color, thickness);
-			
-				Scalar textcolor(255, 255, 255);
-				cv::putText(img, "(0, 0, 0)", _p1_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
-				cv::putText(img, "(0, 6, 0)", _p2_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
-				cv::putText(img, "(9, 6, 0)", _p3_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
-				cv::putText(img, "(9, 0, 0)", _p4_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
-				cv::putText(img, "(0, 0, 6)", _p5_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
-				cv::putText(img, "(0, 6, 6)", _p6_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
-				cv::putText(img, "(9, 6, 6)", _p7_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
-				cv::putText(img, "(9, 0, 6)", _p8_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
 			}
-		}		
+		}
+
+		if (!R.empty() && !tvec.empty() && !rvec.empty()) {
+			_p1_p = world_to_cam_to_pixel(_p1, R, tvec);
+			_p2_p = world_to_cam_to_pixel(_p2, R, tvec);
+			_p3_p = world_to_cam_to_pixel(_p3, R, tvec);
+			_p4_p = world_to_cam_to_pixel(_p4, R, tvec);
+			_p5_p = world_to_cam_to_pixel(_p5, R, tvec);
+			_p6_p = world_to_cam_to_pixel(_p6, R, tvec);
+			_p7_p = world_to_cam_to_pixel(_p7, R, tvec);
+			_p8_p = world_to_cam_to_pixel(_p8, R, tvec);
+
+			cv::line(img, _p1_p, _p2_p, color, thickness);
+			cv::line(img, _p2_p, _p3_p, color, thickness);
+			cv::line(img, _p3_p, _p4_p, color, thickness);
+			cv::line(img, _p4_p, _p1_p, color, thickness);
+
+			cv::line(img, _p5_p, _p6_p, color, thickness);
+			cv::line(img, _p6_p, _p7_p, color, thickness);
+			cv::line(img, _p7_p, _p8_p, color, thickness);
+			cv::line(img, _p8_p, _p5_p, color, thickness);
+
+			cv::line(img, _p1_p, _p5_p, color, thickness);
+			cv::line(img, _p2_p, _p6_p, color, thickness);
+			cv::line(img, _p3_p, _p7_p, color, thickness);
+			cv::line(img, _p4_p, _p8_p, color, thickness);
+
+			Scalar textcolor(255, 255, 255);
+			cv::putText(img, "(0, 0, 0)", _p1_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
+			cv::putText(img, "(0, 8.5, 0)", _p2_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
+			cv::putText(img, "(10, 8.5, 0)", _p3_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
+			cv::putText(img, "(10, 0, 0)", _p4_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
+			cv::putText(img, "(0, 0, 3.3)", _p5_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
+			cv::putText(img, "(0, 8.5, 3.3)", _p6_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
+			cv::putText(img, "(10, 8.5, 3.3)", _p7_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
+			cv::putText(img, "(10, 0, 3.3)", _p8_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
+		}
 		imshow("cam", img);
 	}
 	destroyAllWindows();
