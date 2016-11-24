@@ -20,6 +20,7 @@ double fx = 0.0, fy = 0.0, cx = 0.0, cy = 0.0,
 k1 = 0.0, k2 = 0.0, p1 = 0.0, p2 = 0.0;
 
 Scalar color(0, 0, 0);
+Scalar textcolor(255, 255, 255);
 int thickness = 2;
 
 void init() {
@@ -57,7 +58,8 @@ void init() {
 	vector<Mat> rvecs, tvecs;
 	calibrateCamera(objectPoints, imagePoints, imageSize, cameraMatrix,
 		distCoeffs, rvecs, tvecs, flag | CV_CALIB_FIX_K4 | CV_CALIB_FIX_K5);
-
+	cout << cameraMatrix << endl;
+	cout << distCoeffs << endl;
 	fx = cameraMatrix.at<double>(0, 0);
 	cx = cameraMatrix.at<double>(0, 2);
 	fy = cameraMatrix.at<double>(1, 1);
@@ -100,6 +102,7 @@ Point2f _p5_p;
 Point2f _p6_p;
 Point2f _p7_p;
 Point2f _p8_p;
+string pose;
 
 int main() {
 	std::cout << "Camera Calibration...." << endl;
@@ -167,9 +170,6 @@ int main() {
 				//카메라 원점
 				Mat P = -R_inv*tvec;
 				double* p = (double*)P.data;
-
-				std::cout << "x=" << p[0] << " y=" << p[1] << " z=" << p[2] << endl;
-
 				//pan, tilt
 				double z[] = { 0,0,1 };
 				Mat Zc(3, 1, CV_64FC1, z);
@@ -177,13 +177,12 @@ int main() {
 				double* zw = (double *)Zw.data;
 				double pan = atan2(zw[1], zw[0]) - CV_PI / 2.0;
 				double tilt = atan2(zw[2], sqrt(zw[0]*zw[0] + zw[1]*zw[1]));
-				std::cout << "Pan: " << pan*180.0/CV_PI << endl;
-				std::cout << "Tilt: " << tilt*180.0/CV_PI << endl;
-				std::cout << endl;
+				pose = "x=" + to_string(p[0]) + " y=" + to_string(p[1]) + " z=" + to_string(p[2]) + " pan: " + to_string(pan*180.0 / CV_PI) + " tilt: " + to_string(tilt*180.0 / CV_PI);
 			}
 		}
 
-		if (!R.empty() && !tvec.empty() && !rvec.empty()) {
+		if (!R.empty() && !tvec.empty() && !rvec.empty() && pose != "") {
+			cv::putText(img, pose, Point2f(0, 15), FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0, 255, 0), 1);
 			_p1_p = world_to_cam_to_pixel(_p1, R, tvec);
 			_p2_p = world_to_cam_to_pixel(_p2, R, tvec);
 			_p3_p = world_to_cam_to_pixel(_p3, R, tvec);
@@ -208,7 +207,6 @@ int main() {
 			cv::line(img, _p3_p, _p7_p, color, thickness);
 			cv::line(img, _p4_p, _p8_p, color, thickness);
 
-			Scalar textcolor(255, 255, 255);
 			cv::putText(img, "(0, 0, 0)", _p1_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
 			cv::putText(img, "(0, 8.5, 0)", _p2_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
 			cv::putText(img, "(10, 8.5, 0)", _p3_p, FONT_HERSHEY_SIMPLEX, 0.5, textcolor, 1);
